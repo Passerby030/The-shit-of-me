@@ -1,0 +1,192 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              03/04/2026 02:22:36 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          sbit bit1 = P2^0;  
+   3          sbit bit2 = P2^1;  
+   4          sbit bit3 = P2^2;  
+   5          sbit bit4 = P2^3;  
+   6          sbit bit5 = P2^4;  
+   7          sbit bit6 = P2^5;  
+   8          sbit a=P3^2;
+   9          sbit b=P3^3;
+  10          sbit S=P1^0;
+  11          sbit SS=P1^3;
+  12          sbit SSS=P1^6;
+  13          int total=0;
+  14          unsigned char code number[] = {0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};//小数点为10000000
+  15          unsigned char sec=0;
+  16          unsigned int ms=0;
+  17          int run=0;
+  18          int flaga=0;
+  19          int flagb=0;
+  20          void delay(unsigned int mms) {
+  21   1          unsigned int i, j;
+  22   1          for(i=0; i<mms; i++)
+  23   1              for(j=0; j<123; j++); 
+  24   1      }
+  25          int keyscan(int key)
+  26          {
+  27   1        int state =0;
+  28   1        if(key==0)
+  29   1          {
+  30   2            delay(2);
+  31   2            if(key==0)
+  32   2            {
+  33   3              state=1;
+  34   3              
+  35   3            }
+  36   2      }
+  37   1          return state;
+  38   1          }
+  39          void time_Init()
+  40          {
+  41   1        TMOD|=0x01;//先配置模式
+  42   1        TH0=0xfc;
+  43   1        TL0=0x18;
+  44   1        ET0=1;
+  45   1        EA=1;
+  46   1        TR0=1;
+  47   1      }
+  48          void Timer0_ISR(void) interrupt 1 
+  49            {
+  50   1          
+  51   1          TH0 = 0xFC;
+  52   1          TL0 = 0x18;
+  53   1          TH0 = (65536 - 1000) / 256;
+  54   1          TL0 = (65536 - 1000) % 256;
+C51 COMPILER V9.60.7.0   MAIN                                                              03/04/2026 02:22:36 PAGE 2   
+
+  55   1          if(run==1)
+  56   1          { 
+  57   2          ms++;
+  58   2          if(ms >= 700) 
+  59   2            {  
+  60   3              ms = 0;
+  61   3              sec++;
+  62   3              if(sec >= 60) 
+  63   3                { 
+  64   4                  sec = 0;
+  65   4              }
+  66   3          }
+  67   2         }
+  68   1          }
+  69          void display(){
+  70   1          
+  71   1          bit1 = 1; bit2=1; bit3=1; bit4=1; bit5=1; bit6=1; 
+  72   1          P0 = 0x00; 
+  73   1          bit1 = 0;  
+  74   1          P0 = number[sec/10];
+  75   1          delay(1);
+  76   1          bit1 = 1; 
+  77   1          P0 = 0x00;
+  78   1          bit2 = 0; 
+  79   1          P0 = number[sec%10];
+  80   1          delay(1);
+  81   1          
+  82   1        
+  83   1          bit2 = 1;
+  84   1          P0 = 0x00;
+  85   1          bit3 = 0;
+  86   1          P0 = 0x80; // 只亮小数点
+  87   1          delay(1);
+  88   1          
+  89   1          
+  90   1          bit3 = 1;
+  91   1          P0 = 0x00;
+  92   1          bit4 = 0;
+  93   1          P0 = number[ms/100];
+  94   1          delay(1);
+  95   1          
+  96   1          
+  97   1          bit4 = 1;
+  98   1          P0 = 0x00;
+  99   1          bit5 = 0;
+ 100   1          P0 = number[(ms/10)%10];
+ 101   1          delay(1);
+ 102   1          
+ 103   1         
+ 104   1          bit5 = 1;
+ 105   1          P0 = 0x00;
+ 106   1          bit6 = 0;
+ 107   1          P0 = number[ms%10];
+ 108   1          delay(1);
+ 109   1          
+ 110   1          
+ 111   1          bit6 = 1;
+ 112   1          P0 = 0x00;
+ 113   1      }
+ 114            void main(void) {
+ 115   1          time_Init(); 
+ 116   1            run=0;
+C51 COMPILER V9.60.7.0   MAIN                                                              03/04/2026 02:22:36 PAGE 3   
+
+ 117   1          while(1) {
+ 118   2            total=1000*sec+ms;
+ 119   2              if(keyscan(a)==1&&flaga==0)
+ 120   2              {
+ 121   3                run=!run;
+ 122   3                S=1;
+ 123   3                SS=1;
+ 124   3                SSS=1;
+ 125   3                flaga=1;
+ 126   3              }
+ 127   2              else if(a==1)
+ 128   2              {
+ 129   3              flaga=0;
+ 130   3              }
+ 131   2              if(keyscan(b)==1&&flagb==0)
+ 132   2              {
+ 133   3                run=0;
+ 134   3                ms=0;
+ 135   3                sec=0;
+ 136   3                flagb=1;
+ 137   3                S=1;
+ 138   3                SS=1;
+ 139   3                SSS=1;
+ 140   3              }    
+ 141   2                else if(b==1)
+ 142   2                {
+ 143   3                  flagb=0;
+ 144   3                }
+ 145   2            if(run==0)
+ 146   2            {
+ 147   3              
+ 148   3              if(total>8000&&total<12000)
+ 149   3              {
+ 150   4                S=0;
+ 151   4                if(total>9500&&total<10500)
+ 152   4                {
+ 153   5                  S=0;SS=0;
+ 154   5                  if(total>9800&&total<10200)
+ 155   5                  {
+ 156   6                    S=0;SS=0;SSS=0;
+ 157   6                  }       
+ 158   5              } 
+ 159   4               
+ 160   4          }
+ 161   3        }
+ 162   2            display();
+ 163   2      }
+ 164   1          }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    545    ----
+   CONSTANT SIZE    =     10    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     11       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
